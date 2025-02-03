@@ -1,4 +1,8 @@
 import torch
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from scipy.optimize import brentq
+from scipy.interpolate import interp1d
+from sklearn.metrics import roc_curve
 
 
 def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, device):
@@ -9,6 +13,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, d
     }
     best_val_accuracy = 0.0
     last_val_accuracy = 0.0
+    weights = None
 
     for epoch in range(epochs):
         model.train()
@@ -35,7 +40,8 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, d
 
         epoch_loss = running_loss / len(train_loader)
         epoch_accuracy = 100 * correct / total
-        val_accuracy = evaluate_model(model, val_loader, device)  # Validation accuracy
+        eval_data = evaluate_model(model, val_loader, criterion,device)  # Validation accuracy
+        val_accuracy = eval_data['accuracy']
 
         print(f"Epoch [{epoch + 1}/{epochs}], Loss: {epoch_loss:.4f}, "
               f"Train Accuracy: {epoch_accuracy:.2f}%, Val Accuracy: {val_accuracy:.2f}%")
@@ -52,20 +58,50 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, d
     return last_val_accuracy, best_val_accuracy, history
 
 
-def evaluate_model(model, val_loader, device):
-    model.eval()
-    correct = 0
-    total = 0
+def evaluate_model(model, dataloader, criterion, device):
+    """
+    Evaluate the model on the given dataloader and compute metrics.
+    """
 
-    with torch.no_grad():
-        for inputs, labels in val_loader:
+    model.eval()  # Set model to evaluation mode
+    y_true = []
+    y_pred = []
+    running_loss = 0.0
+
+    with torch.no_grad():  # Disable gradient computation
+        for inputs, labels in dataloader:
             labels = labels.to(torch.float32)
             inputs, labels = inputs.to(device), labels.to(device)
-            outputs = model(inputs)
-            outputs = outputs.squeeze(1)
-            predicted = (outputs > 0.5).float()
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
+            outputs = model(inputs).squeeze(1)
+            loss = criterion(outputs, labels.float())
+            running_loss += loss.item()
 
-    val_accuracy = 100 * correct / total
-    return val_accuracy
+            # Convert outputs to binary predictions (0 or 1)
+            predictions = (outputs >= 0.5).int().squeeze()
+
+            # Store true and predicted labels
+            y_true.extend(labels.cpu().numpy())
+            y_pred.extend(predictions.cpu().numpy())
+
+    # Compute average loss
+    avg_loss = running_loss / len(dataloader)
+
+    # Compute metrics
+    accuracy = accuracy_score(y_true, y_pred)
+    precision = precision_score(y_true, y_pred)
+    recall = recall_score(y_true, y_pred)
+    f1 = f1_score(y_true, y_pred)
+
+    # Compute EER
+    fpr, tpr, thresholds = roc_curve(y_true, y_pred, pos_label=1)
+    eer = brentq(lambda x: 1.0 - x - interp1d(fpr, tpr)(x), 0.0, 1.0)
+
+    # Return metrics as a dictionary
+    return {
+        "loss": avg_loss,
+        "accuracy": accuracy,
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "eer": eer,
+    }

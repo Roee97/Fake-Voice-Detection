@@ -1,9 +1,8 @@
 import librosa
 import torch
-import numpy as np
 import torch.nn.functional as F
-from scipy.signal import resample
 from torch.utils.data import Dataset
+from audiomentations import Compose, AddGaussianNoise, TimeStretch, PitchShift, Shift
 
 
 def read_frac(file_path):
@@ -45,6 +44,10 @@ def preprocess_audio_fixed_length(waveform, sample_rate, target_sample_rate=1600
         waveform = F.pad(waveform, (0, target_length - waveform.size(0)))  # Pad
 
     return waveform
+
+
+def add_augmentations():
+    pass
 
 
 class AudioDataset(Dataset):
