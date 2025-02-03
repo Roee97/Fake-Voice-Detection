@@ -24,3 +24,15 @@ def get_data():
         return local_data_path
 
     return download_asvspoof2019_data()
+
+
+def process_data_frame(unprocessed_df):
+    mapping = {
+      'bonafide': 0,
+      'spoof': 1
+    }
+    df_processed = unprocessed_df[['file_name', 'label']]
+    df_processed.loc[:, 'label'] = df_processed['label'].map(mapping)
+
+    print(df_processed.head())
+    return df_processed
