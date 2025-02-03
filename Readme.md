@@ -22,6 +22,13 @@ We preprocess the dataset differently depending on the model, as detailed below.
 
 ---
 
+## Data overview:
+### Audio file features:
+**MFCC (Mel-Frequency Cepstral Coefficients)** is a widely used feature extraction technique in audio signal processing, particularly for speech and audio classification tasks. It is designed to capture the short-term power spectrum of an audio signal in a way that is more aligned with human auditory perception. 
+
+###  Audio example file - mel spectogram:
+![img.png](images/img.png)
+
 ## 🔄 Data Preprocessing
 Each model requires different preprocessing techniques to transform raw audio into a suitable input format.
 
