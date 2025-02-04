@@ -4,6 +4,7 @@ import librosa
 import random
 
 import numpy as np
+import pandas
 import torch
 import torch.nn.functional as F
 import soundfile
@@ -80,20 +81,27 @@ def has_augmented_files(dir_path):
     return False
 
 
-def add_augmentations(files_dir, percent_of_file_to_augment=0.25):
+def add_augmentations(files_dir, dir_df: pandas.DataFrame, percent_of_file_to_augment=0.25):
     """
     create augmentation files and
     """
     if has_augmented_files(files_dir):
         print(f"Already has augmented files in {files_dir}, not creating again")
+        return
 
     all_files = os.listdir(files_dir)
-    num_of_files_to_augment = int(len(all_files) * percent_of_file_to_augment)
+    num_of_files_to_augment = int(len(dir_df) * percent_of_file_to_augment)
 
-    selected_files = random.sample(all_files, num_of_files_to_augment)
-    for file_name in selected_files:
-        orig_path = os.path.join(files_dir, file_name)
+    selected_files = dir_df.sample(num_of_files_to_augment)
+    new_rows = []
+    for _, row in selected_files.iterrows():
+        orig_path = os.path.join(files_dir, f"{row['file_name']}.flac")
+        new_row = row.copy()
+        new_row['file_name'] = f"aug_{row['file_name']}"
+        new_rows.append(new_row)
         augment_file(orig_path)
+
+    return pandas.concat([dir_df, pandas.DataFrame(new_rows)], ignore_index=True)
 
 
 class AudioDataset(Dataset):

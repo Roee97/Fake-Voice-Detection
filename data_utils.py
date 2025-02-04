@@ -42,17 +42,17 @@ def process_data_frame(files_dir, unprocessed_df):
     # Create new rows for augmented files
     new_rows = []
 
-    for aug_file in augmented_files:
-        # Remove "aug_" prefix and .flac suffix to get original file name
-        original_file = aug_file[4:-5]
-        matching_rows = df_processed[df_processed['file_name'] == original_file]
-
-        if not matching_rows.empty:
-            # Duplicate row(s) and update the filename
-            for _, row in matching_rows.iterrows():
-                new_row = row.copy()
-                new_row['file_name'] = aug_file[:-5]
-                new_rows.append(new_row)
+    # for aug_file in augmented_files:
+    #     # Remove "aug_" prefix and .flac suffix to get original file name
+    #     original_file = aug_file[4:-5]
+    #     matching_rows = df_processed[df_processed['file_name'] == original_file]
+    #
+    #     if not matching_rows.empty:
+    #         # Duplicate row(s) and update the filename
+    #         for _, row in matching_rows.iterrows():
+    #             new_row = row.copy()
+    #             new_row['file_name'] = aug_file[:-5]
+    #             new_rows.append(new_row)
 
     # Append new rows to DataFrame
     if new_rows:
