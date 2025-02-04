@@ -1,16 +1,21 @@
+import os.path
+
 import librosa
+import random
+
+import numpy as np
 import torch
 import torch.nn.functional as F
+import soundfile
 from torch.utils.data import Dataset
 from audiomentations import Compose, AddGaussianNoise, TimeStretch, PitchShift, Shift
 
 
-def read_frac(file_path):
+def read_flac(file_path):
     """
     Reads a .frac file as raw audio data using torchaudio.
     Assumes the .frac file contains raw waveform data.
     """
-    # Load the audio file using torchaudio.load
     try:
         waveform, sample_rate = librosa.load(file_path)
     except Exception as e:
@@ -26,6 +31,10 @@ def preprocess_audio_fixed_length(waveform, sample_rate, target_sample_rate=1600
     - Resamples to the target sample rate.
     - Trims or pads to the target length.
     """
+
+    if waveform is None:
+        return None
+
     # Resample to the target sample rate
     if sample_rate != target_sample_rate:
         waveform = librosa.resample(waveform, orig_sr=sample_rate, target_sr=target_sample_rate)
@@ -46,8 +55,45 @@ def preprocess_audio_fixed_length(waveform, sample_rate, target_sample_rate=1600
     return waveform
 
 
-def add_augmentations():
-    pass
+def augment_file(file_path):
+    augment = Compose([
+        AddGaussianNoise(min_amplitude=0.001, max_amplitude=0.015, p=0.5),
+        TimeStretch(min_rate=0.8, max_rate=1.25, p=0.5),
+        PitchShift(min_semitones=-4, max_semitones=4, p=0.5),
+        Shift(min_shift=-0.5, max_shift=0.5, p=0.5)
+    ])
+
+    # Apply augmentation
+    y, sr = librosa.load(file_path, sr=None)
+    y_aug = augment(samples=y, sample_rate=sr)
+
+    dir_name = os.path.dirname(file_path)
+    file_name = os.path.basename(file_path)
+
+    soundfile.write(f"{dir_name}/aug_{file_name}", y_aug, sr)
+
+
+def has_augmented_files(dir_path):
+    for file_name in os.listdir(dir_path):
+        if file_name.startswith("aug_"):
+            return True
+    return False
+
+
+def add_augmentations(files_dir, percent_of_file_to_augment=0.25):
+    """
+    create augmentation files and
+    """
+    if has_augmented_files(files_dir):
+        print(f"Already has augmented files in {files_dir}, not creating again")
+
+    all_files = os.listdir(files_dir)
+    num_of_files_to_augment = int(len(all_files) * percent_of_file_to_augment)
+
+    selected_files = random.sample(all_files, num_of_files_to_augment)
+    for file_name in selected_files:
+        orig_path = os.path.join(files_dir, file_name)
+        augment_file(orig_path)
 
 
 class AudioDataset(Dataset):
@@ -64,6 +110,8 @@ class AudioDataset(Dataset):
         row = self.df.iloc[idx]
         file_path = f"{self.data_dir}/{row['file_name']}.flac"  # Path to .frac file
         label = row['label']  # 0 for real, 1 for fake
-        waveform, sample_rate = read_frac(file_path)
+        waveform, sample_rate = read_flac(file_path)
         waveform = preprocess_audio_fixed_length(waveform, self.target_sample_rate)
+        if waveform is None:
+            return np.zeros(self.target_sample_rate), torch.tensor(0, dtype=torch.float32)
         return waveform, torch.tensor(label, dtype=torch.float32)

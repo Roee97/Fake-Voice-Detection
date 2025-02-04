@@ -85,7 +85,9 @@ To improve model robustness and generalization, we applied several **audio augme
 
 These augmentations were applied dynamically during training to increase dataset diversity and improve model robustness.
 
----
+
+
+---[aug_LA_T_1000137.flac](asvspoof%2FLA%2FLA%2FASVspoof2019_LA_train%2Fflac%2Faug_LA_T_1000137.flac)
 
 ## 🏗️ Model Architectures
 ### **RawNet**
