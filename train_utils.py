@@ -5,7 +5,7 @@ from scipy.interpolate import interp1d
 from sklearn.metrics import roc_curve
 import torch.optim as optim
 from sklearn.model_selection import ParameterGrid
-
+from torch.utils.data import DataLoader
 
 def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, device):
     history = {
@@ -109,12 +109,12 @@ def evaluate_model(model, dataloader, criterion, device):
     }
 
 
-def get_best_hyperparameters(criterion):
+def get_best_hyperparameters(criterion, train_dataset, val_dataset, model_constructor):
     # Define hyperparameter grid
     param_grid = {
-        'batch_size': [64, 256],
-        'learning_rate': [0.03, 0.01],
-        'epochs': [2, 6],
+        'batch_size': [64, 32],
+        'learning_rate': [0.005, 0.01],
+        'epochs': [7],
         'optimizer': ['Adam', 'RMSprop']
     }
 
@@ -138,21 +138,21 @@ def get_best_hyperparameters(criterion):
         print(f"Testing hyperparameters: {params}")
 
         # Create DataLoader with current batch size
-        train_loader = DataLoader(train_dataset, batch_size=params['batch_size'], shuffle=True, num_workers=2)
-        val_loader = DataLoader(val_dataset, batch_size=params['batch_size'], shuffle=False, num_workers=2)
+        train_loader = DataLoader(train_dataset, batch_size=params['batch_size'], shuffle=True, num_workers=4)
+        val_loader = DataLoader(val_dataset, batch_size=params['batch_size'], shuffle=False, num_workers=4)
 
-        resnet18 = initialize_model()
+        model = model_constructor(device)
 
         # Move model to GPU if available
         device = torch.device('mps' if torch.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu')
-        resnet18 = resnet18.to(device)
+        model.to(device)
 
         # Initialize optimizer based on the current grid search parameters
         optimizer_class = optimizer_map[params['optimizer']]
-        optimizer = optimizer_class(resnet18.parameters(), lr=params['learning_rate'])
+        optimizer = optimizer_class(model.parameters(), lr=params['learning_rate'])
 
         # Train the model
-        last_val_accuracy, best_val, history = train_model(resnet18, train_loader, val_loader, criterion,
+        last_val_accuracy, best_val, history = train_model(model, train_loader, val_loader, criterion,
                                                                        optimizer, params['epochs'], device)
         print(f"Best model validation score during training: {best_val}")
 
@@ -168,3 +168,4 @@ def get_best_hyperparameters(criterion):
     # Print the best hyperparameters
     print(f"Best Hyperparameters: {best_params}")
     print(f"Best Validation Accuracy: {best_accuracy:.2f}%")
+    return best_params.copy(), best_accuracy, best_history

@@ -141,10 +141,10 @@ After training, we evaluated the models on a held-out test set. Here are the key
 - **Equal Error Rate (EER)** (commonly used in speaker verification tasks)
 
 | Model       | Accuracy | Precision | Recall | F1-Score | EER   |
-|------------|----------|----------|------|--------|-------|
-| RawNet     | XX%      | XX%      | XX%  | XX%    | XX%   |
-| ResNet     | 0.898    | 0.898    | 1.00 | 0.964 | 0.5   |
-| Wav2Vec 2.0 | 0.7  | 0.99     | 0.666 | 0.79    | 0.251 |
+|------------|--------|---------|--------|---------|-------|
+| RawNet     | 0.599  | 0.975        | 0.567  | 0.717        | 0.33  |
+| ResNet     | 0.898  | 0.898   | 1.00   | 0.964   | 0.5   |
+| Wav2Vec 2.0 | 0.7    | 0.99    | 0.666  | 0.79    | 0.251 |
 
 ### Rawnet training process:
 ![img.png](images/rawnet_training_process.png)
@@ -152,8 +152,11 @@ After training, we evaluated the models on a held-out test set. Here are the key
 ### Resnet training process:
 ![img.png](images/resnet_training_process.png)
 
+### Wav2Vec training process:
+![img.png](images/wav2vec_training_process.png)
+
 ### **Key Insights**
-- **RawNet performed best/worst due to `INSERT_REASON`**.
+- **RawNet performed worst in terms of accuracy & F1 score **.
 - **ResNet showed strengths in identyfing all test spoofed data! **.
 - **Wav2Vec 2.0 was dissapointing in it's results, giving the advanced Transformer tech it's using **.
 
