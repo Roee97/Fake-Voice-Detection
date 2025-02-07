@@ -42,7 +42,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, d
 
         epoch_loss = running_loss / len(train_loader)
         epoch_accuracy = 100 * correct / total
-        eval_data = evaluate_model(model, val_loader, criterion,device)  # Validation accuracy
+        eval_data = evaluate_model(model, val_loader, criterion, device)  # Validation accuracy
         val_accuracy = eval_data['accuracy']
 
         print(f"Epoch [{epoch + 1}/{epochs}], Loss: {epoch_loss:.4f}, "

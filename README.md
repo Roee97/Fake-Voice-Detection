@@ -85,10 +85,6 @@ To improve model robustness and generalization, we applied several **audio augme
 
 These augmentations were applied dynamically during training to increase dataset diversity and improve model robustness.
 
-
-
----[aug_LA_T_1000137.flac](asvspoof%2FLA%2FLA%2FASVspoof2019_LA_train%2Fflac%2Faug_LA_T_1000137.flac)
-
 ## 🏗️ Model Architectures
 ### **RawNet**
 - End-to-end deep learning model for audio classification.
@@ -112,8 +108,8 @@ These augmentations were applied dynamically during training to increase dataset
 
 Model was trained only on last layers, due to its size and training power needed
 
-- **Batch Size:** `128`
-- **Learning Rate:** `10`
+- **Batch Size:** `32`
+- **Learning Rate:** `0.01`
 - **Optimizer:** `Adam`
 - **Epochs:** `10`
 - **Loss Function:** Cross-entropy loss
@@ -127,13 +123,13 @@ Model was trained only on last layers, due to its size and training power needed
 
 ### **Wav2Vec:**
 Model was trained only on last layers, due to its size and training power needed
-- **Batch Size:** `128`
-- **Learning Rate:** `10`
+- **Batch Size:** `16`
+- **Learning Rate:** `0.001`
 - **Optimizer:** `Adam`
-- **Epochs:** `10`
+- **Epochs:** `5`
 - **Loss Function:** Cross-entropy loss
 
-We used **mps & T4-GPU** to accelerate training.
+We used **mps, T4-GPU & GTX Ti 1650** to accelerate training.
 
 ---
 
@@ -144,11 +140,11 @@ After training, we evaluated the models on a held-out test set. Here are the key
 - **F1-Score**
 - **Equal Error Rate (EER)** (commonly used in speaker verification tasks)
 
-| Model       | Accuracy | Precision | Recall | F1-Score | EER |
-|------------|----------|-----------|--------|----------|----|
-| RawNet     | XX%      | XX%       | XX%    | XX%      | XX% |
-| ResNet     | 89.83%   | 89.83%      | 1.0    | 96.41%   | 0.5|
-| Wav2Vec 2.0 | XX%      | XX%       | XX%    | XX%      | XX% |
+| Model       | Accuracy | Precision | Recall | F1-Score | EER   |
+|------------|----------|----------|------|--------|-------|
+| RawNet     | XX%      | XX%      | XX%  | XX%    | XX%   |
+| ResNet     | 0.898    | 0.898    | 1.00 | 0.964 | 0.5   |
+| Wav2Vec 2.0 | 0.7  | 0.99     | 0.666 | 0.79    | 0.251 |
 
 ### Rawnet training process:
 ![img.png](images/rawnet_training_process.png)
@@ -158,32 +154,49 @@ After training, we evaluated the models on a held-out test set. Here are the key
 
 ### **Key Insights**
 - **RawNet performed best/worst due to `INSERT_REASON`**.
-- **ResNet showed strengths in `INSERT_OBSERVATION`**.
-- **Wav2Vec 2.0 was effective in `INSERT_OBSERVATION`**.
+- **ResNet showed strengths in identyfing all test spoofed data! **.
+- **Wav2Vec 2.0 was dissapointing in it's results, giving the advanced Transformer tech it's using **.
 
 ---
 
 ## 🛠️ How to Use This Repository
 ### ** Clone the Repository**
 ```bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/your_project_name.git
-cd your_project_name
+git clone https://github.com/Roee97/Fake-Voice-Detection.git
+cd Fake-Voice-Detection
 ```
 
-### ** Use the trained models**
-```bash
-trained_models/*
+### ** Use the trained models for getting the model for evaluation, for example: **
+```python
+import torch
+from models.wav2vec_modified import Wav2Vec2BinaryClassifier
+model = Wav2Vec2BinaryClassifier()
+model_path = "trained_models/wav2vec_model_weights.pth"
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model.load_state_dict(torch.load(model_path, map_location=device))
 ```
 ---
 
 ## 📌 Future Work
-- Test on a **different dataset** (e.g., Celeb-DF, ASVspoof 2021).
+- Test on a different fake method dataset, for example Celeb-DF & mix different fake methods
+for better generalization
 - Fine-tune **Wav2Vec 2.0** on this dataset for better results.
 
 ---
 
 ## ✨ Contributors
-- **Your Name** - [GitHub Profile](https://github.com/YOUR_GITHUB_USERNAME)
+- **Roee Seren** - [GitHub Profile](https://github.com/Roee97)
 
-Feel free to contribute by opening an issue or submitting a pull request!
+## Sources
+### Network performance metrics:
+https://www.v7labs.com/blog/f1-score-guide
+
+### RawNet Deepening explanation:
+https://www.isca-archive.org/interspeech_2019/jung19b_interspeech.pdf
+
+### Wav2Vec Deepening explanation:
+https://www.geeksforgeeks.org/wav2vec2-self-a-supervised-learning-technique-for-speech-representations/
+
+### ResNet Deepening explanation:
+https://www.geeksforgeeks.org/residual-networks-resnet-deep-learning/
 
